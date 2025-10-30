@@ -9,14 +9,14 @@ A Neovim plugin that provides a unified, facade-based API for accessing browser 
 - **Browser Detection**: Automatically detects installed browsers with Nerd Font icons
 - **Customizable**: Override detection logic and add custom browsers
 - **Multiple Browsers**: Built-in support for 8 major browsers
-  - 󰈹 Firefox
-  - 󰆧 Zen Browser
-  - 󰊯 Google Chrome
+  -  Firefox
+  -  Zen Browser
+  -  Google Chrome
   -  Chromium
-  - 󰇩 Microsoft Edge
-  - 󰖟 Brave
-  - 󰙯 Opera
-  - 󰖬 Vivaldi
+  -  Microsoft Edge
+  -  Brave
+  -  Opera
+  -  Vivaldi
 - **Snacks Picker Integration**: Optional built-in commands for quick access
 
 ## Dependencies
@@ -185,7 +185,7 @@ require("history-api").setup({
 
 ### Chromium/Chrome/Brave
 - **History**: ✅ Supported
-- **Bookmarks**: ❌ Not supported (stored in JSON file)
+- **Bookmarks**:  ✅ Supported
 - **Database**: `History`
 - **Locations**:
   - Chrome: `~/.config/google-chrome/Default/`
