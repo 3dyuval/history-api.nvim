@@ -17,10 +17,6 @@ end
 
 -- Get a provider for a browser type
 function M.get_provider(browser_key)
-  -- Map chromium-based browsers to chromium provider
-  if browser_key == "chrome" or browser_key == "brave" or browser_key == "chromium" then
-    return M.providers.chromium
-  end
   return M.providers[browser_key]
 end
 

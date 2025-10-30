@@ -29,8 +29,9 @@ local BOOKMARKS_QUERY = [[
 ]]
 
 -- Get Firefox history
-function M.get_history(db_path, limit)
+function M.get_history(db_path, limit, browser_key)
   limit = limit or 1000
+  browser_key = browser_key or "firefox"
   local query = string.format(HISTORY_QUERY, limit)
   local results, err = util.query_db(db_path, query)
 
@@ -45,7 +46,7 @@ function M.get_history(db_path, limit)
       title = row.title or "",
       url = row.url or "",
       date = row.date or "",
-      browser = "firefox",
+      browser = browser_key,
     })
   end
 
@@ -53,8 +54,9 @@ function M.get_history(db_path, limit)
 end
 
 -- Get Firefox bookmarks
-function M.get_bookmarks(db_path, limit)
+function M.get_bookmarks(db_path, limit, browser_key)
   limit = limit or 1000
+  browser_key = browser_key or "firefox"
   local query = string.format(BOOKMARKS_QUERY, limit)
   local results, err = util.query_db(db_path, query)
 
@@ -70,7 +72,7 @@ function M.get_bookmarks(db_path, limit)
       title = row.title or "",
       url = row.url or "",
       date = row.date or "",
-      browser = "firefox",
+      browser = browser_key,
     })
   end
 

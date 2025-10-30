@@ -12,6 +12,7 @@ This document defines the behavior and interfaces of the history-api.nvim plugin
 BrowserInfo = {
   browser: string,      -- Browser key (e.g., "firefox", "chrome")
   name: string,         -- Display name (e.g., "Firefox")
+  icon: string?,        -- Nerd Font icon (optional, e.g., "󰈹")
   db_path: string,      -- Path to database file
   profile_dir: string   -- Path to browser profile directory
 }
@@ -77,6 +78,16 @@ Scenario: Install with custom browser
   When I call setup({ browsers = { my_browser = { name = "My Browser", profile_dirs = {"~/my-browser"}, db_file = "history.db" } } })
   Then chromium provider handles "my_browser"
   And I can query it via retrieve.history("my_browser")
+
+Scenario: Explicitly enable specific browsers for detection
+  When I call setup({ enabled_browsers = { "zen", "chrome" } })
+  Then only Zen and Chrome are detected
+  And Firefox, Brave, and others are ignored
+
+Scenario: Configure Zen browser with specific path
+  When I call setup({ browsers = { zen = { profile_dirs = {"~/.zen"}, profile_glob = "*.[Dd]efault*" } } })
+  Then Zen browser is detected at ~/.zen
+  And uses case-insensitive default pattern matching
 
 Scenario: Setup fails without sqlite.lua
   Given sqlite.lua is not installed

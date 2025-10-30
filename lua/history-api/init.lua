@@ -16,6 +16,11 @@ local defaults = {
   -- }
   browsers = {},
 
+  -- Explicitly enable specific browsers for detection
+  -- If nil/empty, all browsers are detected
+  -- Example: { "firefox", "zen", "chrome" }
+  enabled_browsers = nil,
+
   -- Whether to create user commands (BrowserSearch, BrowserBookmarks, BrowserHistory)
   -- Requires snacks.nvim
   create_commands = false,
@@ -34,14 +39,25 @@ function M.setup(opts)
   local chromium_provider = require("history-api.providers.chromium")
 
   state.register_provider("firefox", firefox_provider)
+  state.register_provider("zen", firefox_provider)
   state.register_provider("chromium", chromium_provider)
   state.register_provider("chrome", chromium_provider)
   state.register_provider("brave", chromium_provider)
+  state.register_provider("edge", chromium_provider)
+  state.register_provider("opera", chromium_provider)
+  state.register_provider("vivaldi", chromium_provider)
+
+  -- Configure browser detection
+  local detect = require("history-api.detect")
 
   -- If user provides custom browser configs, update detection
   if opts.browsers and next(opts.browsers) then
-    local detect = require("history-api.detect")
     detect.add_custom_browsers(opts.browsers)
+  end
+
+  -- If user provides enabled_browsers list, set filter
+  if opts.enabled_browsers then
+    detect.set_enabled_browsers(opts.enabled_browsers)
   end
 
   -- Optionally create user commands for Snacks picker integration

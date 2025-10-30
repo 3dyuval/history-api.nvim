@@ -1,14 +1,23 @@
 # history-api.nvim
 
-A Neovim plugin that provides a unified, facade-based API for accessing browser history and bookmarks from Firefox and Chromium-based browsers (Chrome, Brave, Chromium).
+A Neovim plugin that provides a unified, facade-based API for accessing browser history and bookmarks from all major browsers.
 
 ## Features
 
 - **Clean Facade API**: Simple, intuitive public interface
 - **Pluggable Architecture**: Provider-based system for different browsers
-- **Browser Detection**: Automatically detects installed browsers
+- **Browser Detection**: Automatically detects installed browsers with Nerd Font icons
 - **Customizable**: Override detection logic and add custom browsers
-- **Multiple Browsers**: Built-in support for Firefox, Chrome, Chromium, and Brave
+- **Multiple Browsers**: Built-in support for 8 major browsers
+  - 󰈹 Firefox
+  - 󰆧 Zen Browser
+  - 󰊯 Google Chrome
+  -  Chromium
+  - 󰇩 Microsoft Edge
+  - 󰖟 Brave
+  - 󰙯 Opera
+  - 󰖬 Vivaldi
+- **Snacks Picker Integration**: Optional built-in commands for quick access
 
 ## Dependencies
 
@@ -213,6 +222,23 @@ history-api.nvim/
 - **Thread Safety**: The plugin creates temporary copies of database files to avoid locking issues when browsers are running
 - **Timestamps**: Automatically converts browser-specific timestamp formats to ISO 8601
 - **Error Handling**: All functions return `(result, error)` tuples for proper error handling
+
+### Default Browser Paths (Linux)
+
+All browsers are auto-detected at these standard locations:
+
+| Browser | Icon | Profile Path | Database |
+|---------|------|--------------|----------|
+| Firefox | 󰈹 | `~/.mozilla/firefox/*.default*/` | `places.sqlite` |
+| Zen | 󰆧 | `~/.zen/*.[Dd]efault*/` | `places.sqlite` |
+| Chrome | 󰊯 | `~/.config/google-chrome/Default/` | `History` |
+| Chromium |  | `~/.config/chromium/Default/` | `History` |
+| Edge | 󰇩 | `~/.config/microsoft-edge/Default/` | `History` |
+| Brave | 󰖟 | `~/.config/BraveSoftware/Brave-Browser/Default/` | `History` |
+| Opera | 󰙯 | `~/.config/opera/Default/` | `History` |
+| Vivaldi | 󰖬 | `~/.config/vivaldi/Default/` | `History` |
+
+**Note:** Zen Browser also supports Flatpak installs at `~/.var/app/app.zen_browser.zen/zen/`
 
 ## License
 

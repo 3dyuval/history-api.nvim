@@ -59,4 +59,40 @@ function M.query_db(db_path, sql_query)
   return result
 end
 
+-- Read and parse a JSON file
+function M.read_json_file(file_path)
+  local file, err = io.open(file_path, 'r')
+  if not file then
+    return nil, "Failed to open file: " .. (err or "unknown error")
+  end
+
+  local content = file:read('*a')
+  file:close()
+
+  if not content or content == "" then
+    return nil, "File is empty"
+  end
+
+  local success, result = pcall(vim.fn.json_decode, content)
+  if not success then
+    return nil, "Failed to parse JSON: " .. tostring(result)
+  end
+
+  return result
+end
+
+-- Convert Chrome timestamp (microseconds since Windows epoch) to date string
+function M.chrome_timestamp_to_date(microseconds)
+  if not microseconds or microseconds == 0 then
+    return ""
+  end
+
+  -- Convert Chrome timestamp (microseconds since Windows epoch 1601-01-01)
+  -- to Unix timestamp (seconds since Unix epoch 1970-01-01)
+  local unix_timestamp = (microseconds / 1000000) - 11644473600
+
+  -- Format as YYYY-MM-DD HH:MM:SS
+  return os.date("%Y-%m-%d %H:%M:%S", unix_timestamp)
+end
+
 return M

@@ -2,9 +2,10 @@
 local M = {}
 
 function M.setup()
-  local has_snacks, Snacks = pcall(require, "snacks")
+  -- Check for Snacks picker (only needed for picker functionality, not notifications)
+  local has_snacks, snacks_picker = pcall(require, "snacks.picker")
   if not has_snacks then
-    vim.notify("history-api.nvim commands require snacks.nvim", vim.log.levels.WARN)
+    vim.notify("history-api.nvim commands require snacks.nvim picker", vim.log.levels.WARN)
     return
   end
 
@@ -12,28 +13,41 @@ function M.setup()
 
   -- Browser Search: Combined history and bookmarks picker
   vim.api.nvim_create_user_command("BrowserSearch", function()
+    -- Detect first available browser from enabled_browsers list
+    local browser_info = api.detect.detect_first()
+    if not browser_info then
+      vim.notify("No browsers detected. Check your enabled_browsers configuration.", vim.log.levels.ERROR)
+      return
+    end
+
     local all_items = {}
 
     -- Get history
-    local history, _ = api.retrieve.history("firefox", { limit = 300 })
-    if history then
-      for _, item in ipairs(history) do
-        item.source = "History"
-        table.insert(all_items, item)
-      end
+    local history, err = api.retrieve.history(browser_info, { limit = 300 })
+    if not history then
+      vim.notify("Failed to get history: " .. (err or "unknown error"), vim.log.levels.ERROR)
+      return
+    end
+    for _, item in ipairs(history) do
+      item.source = "H"
+      item.icon = browser_info.icon or ""
+      table.insert(all_items, item)
     end
 
     -- Get bookmarks
-    local bookmarks, _ = api.retrieve.bookmarks("firefox", { limit = 200 })
-    if bookmarks then
+    local bookmarks, err = api.retrieve.bookmarks(browser_info, { limit = 200 })
+    if not bookmarks then
+      vim.notify("Failed to get bookmarks: " .. (err or "unknown error"), vim.log.levels.WARN)
+    else
       for _, item in ipairs(bookmarks) do
-        item.source = "Bookmark"
+        item.source = "B"
+        item.icon = browser_info.icon or ""
         table.insert(all_items, item)
       end
     end
 
     if #all_items == 0 then
-      Snacks.notify.warn("No browser data found")
+      vim.notify("No browser data found", vim.log.levels.WARN)
       return
     end
 
@@ -42,11 +56,11 @@ function M.setup()
 
     -- Prepare for picker
     for _, item in ipairs(all_items) do
-      item.text = string.format("%s [%s] %s %s",
-        item.date, item.source, item.title or "", item.url)
+      item.text = string.format("%s %s [%s] %s %s",
+        item.icon, item.date, item.source, item.title or "", item.url)
     end
 
-    Snacks.picker.pick({
+    snacks_picker.pick({
       win = {
         title = "Browser Search",
         input = {
@@ -59,9 +73,11 @@ function M.setup()
       finder = function() return all_items end,
       format = function(item)
         return {
+          { item.icon or "", "Special" },
+          { " " },
           { string.format("%-20s", item.date or ""), "Number" },
           { " " },
-          { string.format("%-10s", "[" .. (item.source or "?") .. "]"), "Keyword" },
+          { string.format("%-3s", "[" .. (item.source or "?") .. "]"), "Keyword" },
           { " " },
           { string.format("%-60s", item.title or ""), "Function" },
           { " " },
@@ -76,7 +92,7 @@ function M.setup()
             table.insert(urls, item.url)
           end
           vim.fn.setreg(vim.v.register, table.concat(urls, '\n'))
-          Snacks.notify.info("Yanked " .. #urls .. " URL(s)")
+          vim.notify("Yanked " .. #urls .. " URL(s)", vim.log.levels.INFO)
         end,
         insert_url = function(picker, _)
           local items = picker:selected({ fallback = true })
@@ -86,7 +102,7 @@ function M.setup()
           end
           picker:close()
           vim.api.nvim_put(urls, "c", true, true)
-          Snacks.notify.info("Inserted " .. #urls .. " URL(s)")
+          vim.notify("Inserted " .. #urls .. " URL(s)", vim.log.levels.INFO)
         end,
       },
       confirm = function(picker, _)
@@ -101,18 +117,26 @@ function M.setup()
 
   -- Browser Bookmarks: Bookmarks-only picker
   vim.api.nvim_create_user_command("BrowserBookmarks", function()
-    local bookmarks, err = api.retrieve.bookmarks("firefox", { limit = 500 })
+    -- Detect first available browser from enabled_browsers list
+    local browser_info = api.detect.detect_first()
+    if not browser_info then
+      vim.notify("No browsers detected. Check your enabled_browsers configuration.", vim.log.levels.ERROR)
+      return
+    end
+
+    local bookmarks, err = api.retrieve.bookmarks(browser_info, { limit = 500 })
     if not bookmarks then
-      Snacks.notify.error("Error: " .. err)
+      vim.notify("Error: " .. (err or "unknown error"), vim.log.levels.ERROR)
       return
     end
 
     for _, item in ipairs(bookmarks) do
-      item.text = string.format("%s %s %s %s",
-        item.date, item.folder or "", item.title or "", item.url)
+      item.icon = browser_info.icon or ""
+      item.text = string.format("%s %s %s %s %s",
+        item.icon, item.date, item.folder or "", item.title or "", item.url)
     end
 
-    Snacks.picker.pick({
+    snacks_picker.pick({
       win = {
         title = "Browser Bookmarks",
         input = {
@@ -125,6 +149,8 @@ function M.setup()
       finder = function() return bookmarks end,
       format = function(item)
         return {
+          { item.icon or "", "Special" },
+          { " " },
           { string.format("%-20s", item.date or ""), "Number" },
           { " " },
           { string.format("%-15s", item.folder or ""), "Keyword" },
@@ -142,7 +168,7 @@ function M.setup()
             table.insert(urls, item.url)
           end
           vim.fn.setreg(vim.v.register, table.concat(urls, '\n'))
-          Snacks.notify.info("Yanked " .. #urls .. " URL(s)")
+          vim.notify("Yanked " .. #urls .. " URL(s)", vim.log.levels.INFO)
         end,
         insert_url = function(picker, _)
           local items = picker:selected({ fallback = true })
@@ -152,7 +178,7 @@ function M.setup()
           end
           picker:close()
           vim.api.nvim_put(urls, "c", true, true)
-          Snacks.notify.info("Inserted " .. #urls .. " URL(s)")
+          vim.notify("Inserted " .. #urls .. " URL(s)", vim.log.levels.INFO)
         end,
       },
       confirm = function(picker, _)
@@ -167,17 +193,25 @@ function M.setup()
 
   -- Browser History: History-only picker
   vim.api.nvim_create_user_command("BrowserHistory", function()
-    local history, err = api.retrieve.history("firefox", { limit = 500 })
+    -- Detect first available browser from enabled_browsers list
+    local browser_info = api.detect.detect_first()
+    if not browser_info then
+      vim.notify("No browsers detected. Check your enabled_browsers configuration.", vim.log.levels.ERROR)
+      return
+    end
+
+    local history, err = api.retrieve.history(browser_info, { limit = 500 })
     if not history then
-      Snacks.notify.error("Error: " .. err)
+      vim.notify("Error: " .. (err or "unknown error"), vim.log.levels.ERROR)
       return
     end
 
     for _, item in ipairs(history) do
-      item.text = string.format("%s %s %s", item.date, item.title or "", item.url)
+      item.icon = browser_info.icon or ""
+      item.text = string.format("%s %s %s %s", item.icon, item.date, item.title or "", item.url)
     end
 
-    Snacks.picker.pick({
+    snacks_picker.pick({
       win = {
         title = "Browser History",
         input = {
@@ -190,6 +224,8 @@ function M.setup()
       finder = function() return history end,
       format = function(item)
         return {
+          { item.icon or "", "Special" },
+          { " " },
           { string.format("%-20s", item.date or ""), "Number" },
           { " " },
           { string.format("%-70s", item.title or ""), "Function" },
@@ -205,7 +241,7 @@ function M.setup()
             table.insert(urls, item.url)
           end
           vim.fn.setreg(vim.v.register, table.concat(urls, '\n'))
-          Snacks.notify.info("Yanked " .. #urls .. " URL(s)")
+          vim.notify("Yanked " .. #urls .. " URL(s)", vim.log.levels.INFO)
         end,
         insert_url = function(picker, _)
           local items = picker:selected({ fallback = true })
@@ -215,7 +251,7 @@ function M.setup()
           end
           picker:close()
           vim.api.nvim_put(urls, "c", true, true)
-          Snacks.notify.info("Inserted " .. #urls .. " URL(s)")
+          vim.notify("Inserted " .. #urls .. " URL(s)", vim.log.levels.INFO)
         end,
       },
       confirm = function(picker, _)

@@ -30,7 +30,7 @@ function M.history(browser, opts)
     return nil, "No provider available for: " .. browser_info.browser
   end
 
-  return provider.get_history(browser_info.db_path, opts.limit or 1000)
+  return provider.get_history(browser_info.db_path, opts.limit or 1000, browser_info.browser)
 end
 
 -- Get bookmarks from a specific browser
@@ -59,7 +59,7 @@ function M.bookmarks(browser, opts)
     return nil, "No provider available for: " .. browser_info.browser
   end
 
-  return provider.get_bookmarks(browser_info.db_path, opts.limit or 1000)
+  return provider.get_bookmarks(browser_info.db_path, opts.limit or 1000, browser_info.browser)
 end
 
 -- List all detected browsers
