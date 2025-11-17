@@ -1,98 +1,19 @@
 local M = {}
 
+local util = require("history-api.util")
+local browsers = require("history-api.browsers")
+
 -- Enabled browsers filter (nil = all browsers enabled)
 local enabled_browsers = nil
 
--- Browser profile configurations
-local BROWSERS = {
-	firefox = {
-		name = "Firefox",
-		icon = "󰈹", -- nf-md-firefox
-		profile_dirs = {
-			"~/.mozilla/firefox",
-		},
-		profile_glob = "*.default*",
-		db_file = "places.sqlite",
-	},
-	zen = {
-		name = "Zen Browser",
-		icon = "",
-		profile_dirs = {
-			"~/.zen",
-			"~/.var/app/app.zen_browser.zen/zen", -- Flatpak
-		},
-		profile_glob = "*.[Dd]efault*",
-		db_file = "places.sqlite",
-	},
-	chrome = {
-		name = "Google Chrome",
-		icon = "󰊭",
-		profile_dirs = {
-			"~/.config/google-chrome/Default",
-		},
-		db_file = "History",
-	},
-	chromium = {
-		name = "Chromium",
-		icon = "󰊯",
-		profile_dirs = {
-			"~/.config/chromium/Default",
-		},
-		db_file = "History",
-	},
-	edge = {
-		name = "Microsoft Edge",
-		icon = "󰇩", -- nf-md-microsoft_edge
-		profile_dirs = {
-			"~/.config/microsoft-edge/Default",
-		},
-		db_file = "History",
-	},
-	brave = {
-		name = "Brave",
-		icon = "󰖟",
-		profile_dirs = {
-			"~/.config/BraveSoftware/Brave-Browser/Default",
-		},
-		db_file = "History",
-	},
-	opera = {
-		name = "Opera",
-		icon = "", -- nf-md-opera
-		profile_dirs = {
-			"~/.config/opera/Default",
-			"~/.opera", -- Legacy
-		},
-		db_file = "History",
-	},
-	vivaldi = {
-		name = "Vivaldi",
-		icon = "󰖟",
-		profile_dirs = {
-			"~/.config/vivaldi/Default",
-		},
-		db_file = "History",
-	},
-}
-
--- Check if a file exists
-local function file_exists(path)
-	local expanded = vim.fn.expand(path)
-	local stat = vim.loop.fs_stat(expanded)
-	return stat ~= nil and stat.type == "file"
-end
-
--- Check if a directory exists
-local function dir_exists(path)
-	local expanded = vim.fn.expand(path)
-	local stat = vim.loop.fs_stat(expanded)
-	return stat ~= nil and stat.type == "directory"
-end
+-- =============================================================================
+-- INTERNAL FUNCTIONS
+-- =============================================================================
 
 -- Detect a specific browser
 local function detect_browser(browser_key, config)
 	for _, profile_dir in ipairs(config.profile_dirs) do
-		if dir_exists(profile_dir) then
+		if util.dir_exists(profile_dir) then
 			local db_path
 			if config.profile_glob then
 				-- Firefox-style: search with glob pattern
@@ -105,7 +26,7 @@ local function detect_browser(browser_key, config)
 				db_path = vim.fn.expand(profile_dir .. "/" .. config.db_file)
 			end
 
-			if db_path and file_exists(db_path) then
+			if db_path and util.file_exists(db_path) then
 				return {
 					browser = browser_key,
 					name = config.name,
@@ -119,10 +40,14 @@ local function detect_browser(browser_key, config)
 	return nil
 end
 
+-- =============================================================================
+-- PUBLIC API - User-facing functions
+-- =============================================================================
+
 -- Detect all available browsers
 function M.detect_all()
 	local detected = {}
-	for key, config in pairs(BROWSERS) do
+	for key, config in pairs(browsers.BROWSERS) do
 		-- Skip if not in enabled list
 		if enabled_browsers and not vim.tbl_contains(enabled_browsers, key) then
 			goto continue
@@ -140,7 +65,7 @@ end
 
 -- Detect a specific browser by key
 function M.detect(browser_key)
-	local config = BROWSERS[browser_key]
+	local config = browsers.BROWSERS[browser_key]
 	if not config then
 		return nil, "Unknown browser: " .. browser_key
 	end
@@ -160,15 +85,15 @@ end
 -- This allows users to override detection logic or add new browsers
 function M.add_custom_browsers(custom_browsers)
 	for key, config in pairs(custom_browsers) do
-		BROWSERS[key] = vim.tbl_deep_extend("force", BROWSERS[key] or {}, config)
+		browsers.BROWSERS[key] = vim.tbl_deep_extend("force", browsers.BROWSERS[key] or {}, config)
 	end
 end
 
 -- Set which browsers to detect
 -- Pass nil or empty table to detect all browsers
 -- Example: { "firefox", "zen", "chrome" }
-function M.set_enabled_browsers(browsers)
-	enabled_browsers = browsers
+function M.set_enabled_browsers(browser_list)
+	enabled_browsers = browser_list
 end
 
 return M

@@ -95,4 +95,32 @@ function M.chrome_timestamp_to_date(microseconds)
   return os.date("%Y-%m-%d %H:%M:%S", unix_timestamp)
 end
 
+-- Detect the operating system
+function M.get_os()
+	local os_name = vim.loop.os_uname().sysname:lower()
+	if os_name:find("darwin") then
+		return "macos"
+	elseif os_name:find("linux") then
+		return "linux"
+	elseif os_name:find("windows") then
+		return "windows"
+	else
+		return "linux" -- fallback
+	end
+end
+
+-- Check if a file exists
+function M.file_exists(path)
+	local expanded = vim.fn.expand(path)
+	local stat = vim.loop.fs_stat(expanded)
+	return stat ~= nil and stat.type == "file"
+end
+
+-- Check if a directory exists
+function M.dir_exists(path)
+	local expanded = vim.fn.expand(path)
+	local stat = vim.loop.fs_stat(expanded)
+	return stat ~= nil and stat.type == "directory"
+end
+
 return M
